@@ -14,7 +14,7 @@
 using namespace std;
 using namespace Boost::Internal;
 
-bool debug=false;
+static bool debug=false;
 
 void DParser::parse(string name,vector<std::string>& ins,string outs,string data_typeStr,string kernelStr){
     string noEmpty="";
@@ -298,7 +298,7 @@ Stmt DParser::build_loop(string expr){
     return LoopNest::make(loopIndex, {if_stmt});
 }
 
-bool subseteq(set<string> & A,set<string> & B){
+static bool subseteq(set<string> & A,set<string> & B){
     for(auto str: A){
         if(B.find(str)==B.end())
             return false;

@@ -14,7 +14,7 @@
 using namespace std;
 using namespace Boost::Internal;
 
-bool debug=false;
+static bool debug=false;
 bool isLeft = 0;
 
 void Parser::parse(string name,vector<std::string>& ins,string outs,string data_typeStr,string kernelStr){
@@ -330,7 +330,7 @@ Stmt Parser::build_loop(string expr){
     return LoopNest::make(loopIndex, {moveStmt});
 }
 
-bool subseteq(set<string> & A,set<string> & B){
+static bool subseteq(set<string> & A,set<string> & B){
     for(auto str: A){
         if(B.find(str)==B.end())
             return false;
