@@ -105,11 +105,10 @@ int main() {
         setInOut(varIdSet, J.grad_to, J.ins, J.outs);
 
         Parser *parser = new Parser();
-        cout <<J.name<<"_" <<J.kernel;
-        cout <<J.ins.size();
+        cout <<J.name<<":\n" <<J.kernel<<"ins: ";
         for (int i = 0; i < J.ins.size(); ++i)
-           cout << "_" << J.ins[i] << "_";
-        cout << "\n" << "_" << J.outs << "_\n";
+           cout << J.ins[i] << " ";
+        cout << "\nouts: " << J.outs << "\n";
         int r = J.kernel.find('\r\n');
         while (r != string::npos)
         {
