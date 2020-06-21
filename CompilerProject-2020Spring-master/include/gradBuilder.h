@@ -1,3 +1,9 @@
+/*
+    Created by Jiang Xinrui
+    filename : gradBuilder.h
+    date : 2020.06.20
+*/
+
 #include <string>
 #include <sstream>
 #include <map>
@@ -5,12 +11,30 @@
 #include <set>
 
 #include "IRMutator.h"
-#include "IRVisitor.h"
 
 
 namespace Boost {
 
 namespace Internal {
+
+/*
+   Used to gather all existing index names.
+*/
+
+class IndexMutator : public IRMutator{
+   public:
+      std::set<std::string> indexSet;
+      Expr visit(Ref<const Index> op) override{
+         if(indexSet.find(op->name) == indexSet.end()){
+            indexSet.insert(op->name);
+         }
+         return Index::make(op->type(), op->name, op->dom, op->index_type);
+      }
+};
+
+/*
+   Used to gather all existing var names.
+*/
 
 class varMutator : public IRMutator{
    public:
@@ -29,6 +53,10 @@ class varMutator : public IRMutator{
       }
 };
 
+/*
+   Used to process index transformation according to rules(Map).
+*/
+
 class formChanger : public IRMutator{
    public:
       int curDom;
@@ -41,28 +69,56 @@ class formChanger : public IRMutator{
       Expr visit(Ref<const Binary>) override;
 };
 
+/*
+   Core class.
+   Used in back propagation.
+*/
+
 class gradBuilder : public IRMutator {
    public:
-      Expr adjointExpr, accumExpr;
-      Stmt adjointStmt;
-      std::string gradToVarName;
-      bool isLHS;
-      bool isGradVar;
-      bool isIndex;
-      bool isInput;
-      bool isFirstStmt;
-      int charCnt;
-      bool justGetName;
-      bool isCollect;
-      bool isGetInt;
-      std::string curIndexName;
+      Expr adjointExpr, accumExpr; //accumExpr deprecated
+      Stmt adjointStmt;//statement we need to return
+      std::string gradToVarName;//the name of the "grad var"
+      
+      /*
+         global flags, used to control function behavior.
+         general usage:
+            flag = true;
+            do_something();
+            flag = false;
+
+            void do_something(){
+               if(flag){
+                  ...
+               }
+               else{
+                  ...
+               }
+            }
+      */
+
+      bool Gdebug;//debug option
+      bool isLHS; //if it's a LHS
+      bool isGradVar; //if it's the "grad var"
+      bool isIndex; //if this Binary Expr is used as an index
+      bool isInput; //if this var is currently one of the kernel.inputs
+      bool isFirstStmt; //if adjointStmt is the first one(also the standard one)
+      bool justGetName; //if we just want to get its name when visiting the node
+      bool isCollect; //if we just want to collect information when visiting index
+      bool isGetInt; //if we just want to get value when visiting Imm node
+      
+      
+      std::string curIndexName; 
+      int charCnt; //Used to generate new index name
       int curDom, curIndex;
       int DivModNum;
       formChanger changer;
       std::vector<std::string> IndexCollect;
-      Expr curDst, curSrc;
-      Expr divIndex, modIndex;
+      Expr curDst, curSrc; //Used when combining different adjointStmt
+      Expr divIndex, modIndex; //Used in Binary index
+      IndexMutator indexSetter; //Collect index name before core function
       gradBuilder() : IRMutator() {
+         Gdebug = false;
          adjointExpr = Expr();
          isLHS = isGradVar = isIndex = isInput = false;
          isFirstStmt = true;
